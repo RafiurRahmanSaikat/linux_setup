@@ -27,7 +27,7 @@ show_menu() {
     echo -e "${BOLD}${GREEN}$border${NC}"
     echo -e "0) Set Time And Mount Data"
     echo -e "1) Setup Devlopment Environment"
-    echo -e "2) Install Grub Theme"  # New option
+    echo -e "2) Install Grub Theme"
     echo -e "3) Install Git"
     echo -e "4) Install NVM and Node.js"
     echo -e "5) Install Python"
@@ -50,22 +50,23 @@ show_menu() {
 
 install_dev_softwere() {
     echo -e "${GREEN}Installing Requried Development Application...${NC}"
-setup_aliases
-    # install_dependencies
-    # install_nvm_node
-    # install_git
-    # config_bash_shell
-    # install_fish
-    # install_pnpm
-    # install_python
-    # install_mongodb
-    # install_mysql
-    # install_postgresql   #! Not Released For Latest Kubuntu
-    # install_postman
-    # install_vscode
-    # install_chrome
-    # install_zoom
-    # install_grub
+
+    install_dependencies
+    install_nvm_node
+    install_fish
+    setup_aliases
+    install_git
+    config_bash_shell
+    install_pnpm
+    install_python
+    install_mongodb
+    install_mysql
+#     install_postgresql
+    install_postman
+    install_vscode
+    install_chrome
+    install_zoom
+    install_grub
 
     echo -e "${GREEN}All development applications installed successfully!${NC}"
 
@@ -87,6 +88,9 @@ setup_aliases() {
        # Bash aliases
     {
         echo "# Development Environment Aliases"
+        echo "export PATH=\"$HOME/.local/bin:\$PATH\""
+        echo "export PNPM_HOME=\"/home/kubuntu/.local/share/pnpm\""
+
         echo "alias ll='ls -la'"
         echo "alias la='ls -A'"
         echo "alias l='ls -CF'"
@@ -110,8 +114,10 @@ setup_aliases() {
 
         echo "# Node.js / NPM Aliases"
         echo "alias npi='npm install'"
+        echo "alias nps='npm run dev'"
         echo "alias nprm='npm remove'"
         echo "alias pni='pnpm install'"
+        echo "alias pns='pnpm run dev'"
         echo "alias pnrm='pnpm remove'"
 
         echo "# Yarn Aliases"
@@ -142,6 +148,8 @@ setup_aliases() {
     # Fish aliases
     fish_config_file=~/.config/fish/config.fish
     {
+        echo "set -gx PATH $HOME/.local/bin $PATH"
+
         echo "# Development Environment Aliases"
         echo "function ll"
         echo "    ls -la \$argv"
@@ -222,12 +230,20 @@ setup_aliases() {
         echo "    npm install \$argv"
         echo "end"
         echo ""
+        echo "function nps"
+        echo "    npm run dev \$argv"
+        echo "end"
+        echo ""
         echo "function nprm"
         echo "    npm remove \$argv"
         echo "end"
         echo ""
         echo "function pni"
         echo "    pnpm install \$argv"
+        echo "end"
+        echo ""
+        echo "function pns"
+        echo "    pnpm run dev \$argv"
         echo "end"
         echo ""
         echo "function pnrm"
@@ -332,6 +348,7 @@ install_fish() {
     } >> "$fish_config_file"
 
     source "$fish_config_file"
+    # fish_update_completions
 
     echo -e "${GREEN}Fish installed and set as default shell! ${NC}"
     echo -e "${YELLOW}Please restart your terminal for changes to take effect.${NC}"
@@ -345,7 +362,7 @@ install_fish() {
 install_dependencies() {
     echo -e "${GREEN}Installing required dependencies...${NC}"
 
-    sudo nala install -y curl wget vim neofetch build-essential gdb lcov pkg-config \
+    sudo nala install -y curl wget vim neofetch build-essential gdb libpq-dev lcov pkg-config \
         libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
         libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
         lzma lzma-dev tk-dev uuid-dev zlib1g-dev || error_exit "Failed to install dependencies."
@@ -417,7 +434,7 @@ install_mount_drive_set_time() {
     fi
 
     # Update /etc/fstab
-    echo "UUID=CC0255FB0255EB4A /Data ntfs defaults,uid=1000,gid=1000,dmask=000,fmask=000 0 0" | sudo tee -a /etc/fstab || error_exit "Failed to update /etc/fstab."
+    echo "UUID=746AACA86AAC6896 /Data ntfs defaults,uid=1000,gid=1000,dmask=077,fmask=077 0 0" | sudo tee -a /etc/fstab || error_exit "Failed to update /etc/fstab."
 
     # Reload the systemd manager configuration
     echo -e "${YELLOW}Reloading systemd manager configuration...${NC}"
@@ -478,7 +495,7 @@ install_nvm_node() {
 install_python() {
     echo -e "${GREEN}Starting installation of Python...${NC}"
 
-    PYTHON_TARBALL=$(find "$APP_DIR" -name "Python-*.tar.xz" -print -quit)
+    PYTHON_TARBALL=$(find "$APP_DIR" -name "Python*.tar.xz" -print -quit)
 
     if [ -z "$PYTHON_TARBALL" ]; then
         error_exit "Python tarball not found. Please ensure the Python tarball is in the '$APP_DIR' directory."
@@ -625,25 +642,96 @@ install_mysql() {
 
 
 
-install_vscode() {
-    echo -e "${GREEN}Starting installation of Visual Studio Code...${NC}"
-    install_package "code_*.deb"
-    echo -e "${GREEN}Visual Studio Code installation completed successfully!${NC}"
-}
+    install_vscode() {
+        echo -e "${GREEN}Starting installation of Visual Studio Code...${NC}"
+        install_package "code_*.deb"
+        echo -e "${GREEN}Visual Studio Code installation completed successfully!${NC}"
+    }
 
-install_postgresql() {
-    echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
+# install_postgresql() {
+#     echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
 
-    sudo apt update || error_exit "Failed to update package list."
-    sudo apt install -y postgresql postgresql-contrib || error_exit "PostgreSQL installation failed."
+#     sudo apt update || error_exit "Failed to update package list."
+#     sudo nala install -y postgresql postgresql-contrib || error_exit "PostgreSQL installation failed."
 
-    # Execute the PostgreSQL setup script
-    sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || error_exit "Failed to execute PostgreSQL setup script."
+#     # Execute the PostgreSQL setup script
+#     yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || error_exit "Failed to execute PostgreSQL setup script."
 
-    echo -e "${GREEN}PostgreSQL installation completed successfully!${NC}"
-}
+#     # Setup the pgAdmin repository
+#     echo -e "${GREEN}Setting up the pgAdmin repository...${NC}"
+#     curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+#     echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" | sudo tee /etc/apt/sources.list.d/pgadmin4.list
+#     sudo apt update || error_exit "Failed to update package list after adding pgAdmin repository."
 
+#     # Install pgAdmin for GUI management
+#     echo -e "${GREEN}Installing pgAdmin for PostgreSQL GUI management...${NC}"
+#     sudo nala install -y pgadmin4-desktop pgadmin4-web || error_exit "pgAdmin installation failed."
 
+#     # Configure the pgAdmin web server (automatic configuration)
+#     echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
+#     sudo /usr/pgadmin4/bin/setup-web.sh --email admin@root.com --password ' password' || error_exit "Failed to configure pgAdmin web server."
+
+#     # Configure PostgreSQL (optional)
+#     echo -e "${GREEN}Configuring PostgreSQL...${NC}"
+
+#     # Switch to the postgres user to execute psql commands
+#     PASSWORD='password'  # Replace with your desired password
+#     sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
+
+#     # Allow remote connections (optional)
+#     echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
+#     echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
+
+#     # Restart PostgreSQL to apply changes
+#     sudo systemctl restart postgresql || error_exit "Failed to restart PostgreSQL service."
+
+#     echo -e "${GREEN}PostgreSQL installation and configuration completed successfully!${NC}"
+# }
+
+# install_postgresql() {
+#     echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
+
+#     # Update package list
+#     sudo apt update || error_exit "Failed to update package list."
+
+#     # Install PostgreSQL
+#     sudo nala install -y postgresql postgresql-contrib || error_exit "PostgreSQL installation failed."
+
+#     # Execute the PostgreSQL setup script
+#     yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || error_exit "Failed to execute PostgreSQL setup script."
+
+#     # Setup the pgAdmin repository
+#     echo -e "${GREEN}Setting up the pgAdmin repository...${NC}"
+#     curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+#     echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/noble pgadmin4 main" | sudo tee /etc/apt/sources.list.d/pgadmin4.list
+
+#     # Update package list after adding pgAdmin repository
+#     sudo apt update || error_exit "Failed to update package list after adding pgAdmin repository."
+
+#     # Install pgAdmin for GUI management
+#     echo -e "${GREEN}Installing pgAdmin for PostgreSQL GUI management...${NC}"
+#     sudo nala install -y pgadmin4-desktop pgadmin4-web || error_exit "pgAdmin installation failed."
+
+#     # Configure the pgAdmin web server (automatic configuration)
+#     echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
+#     sudo /usr/pgadmin4/bin/setup-web.sh  || error_exit "Failed to configure pgAdmin web server."
+
+#     # Configure PostgreSQL
+#     echo -e "${GREEN}Configuring PostgreSQL...${NC}"
+
+#     # Set PostgreSQL password
+#     PASSWORD='password'  # Replace with your desired password
+#     sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
+
+#     # Allow remote connections
+#     echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
+#     echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
+
+#     # Restart PostgreSQL to apply changes
+#     sudo systemctl restart postgresql || error_exit "Failed to restart PostgreSQL service."
+
+#     echo -e "${GREEN}PostgreSQL installation and configuration completed successfully!${NC}"
+# }
 
 install_nala() {
     echo -e "${GREEN}Installing Nala...${NC}"
@@ -674,7 +762,7 @@ while true; do
         11) install_vscode ;;
         12) install_postgresql ;;
         13) install_fish && config_bash_shell ;;
-        14) install_dev_softwere;;
+        14) install_mount_drive_set_time && install_dev_softwere;;
         15) exit 0 ;;  # Update exit option
         *) echo -e "${RED}Invalid option. Please try again.${NC}" ;;
     esac
