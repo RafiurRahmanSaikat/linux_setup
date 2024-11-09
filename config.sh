@@ -323,9 +323,6 @@ setup_aliases() {
 
 
 
-
-
-
 install_fish() {
     echo -e "${GREEN}Installing Fish...${NC}"
     sudo apt update || error_exit "Failed to update package list."
@@ -625,7 +622,7 @@ install_mysql() {
     echo -e "${GREEN}Starting installation of Mysql Community Workbench...${NC}"
 
 
-    install_package "mysql-workbench-community_*.deb"
+    install_package "mysql-workbench-community*.deb"
 
 
     sudo systemctl start mysql || error_exit "Failed to start MySQL service."
@@ -648,90 +645,62 @@ install_mysql() {
         echo -e "${GREEN}Visual Studio Code installation completed successfully!${NC}"
     }
 
-# install_postgresql() {
-#     echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
+#!/bin/bash
 
-#     sudo apt update || error_exit "Failed to update package list."
-#     sudo nala install -y postgresql postgresql-contrib || error_exit "PostgreSQL installation failed."
+GREEN='\033[0;32m'
+NC='\033[0m'  # No Color
 
-#     # Execute the PostgreSQL setup script
-#     yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || error_exit "Failed to execute PostgreSQL setup script."
+# Function to display error and exit
+error_exit() {
+    echo -e "${RED}$1${NC}"
+    exit 1
+}
 
-#     # Setup the pgAdmin repository
-#     echo -e "${GREEN}Setting up the pgAdmin repository...${NC}"
-#     curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
-#     echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" | sudo tee /etc/apt/sources.list.d/pgadmin4.list
-#     sudo apt update || error_exit "Failed to update package list after adding pgAdmin repository."
+install_postgresql() {
+    echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
 
-#     # Install pgAdmin for GUI management
-#     echo -e "${GREEN}Installing pgAdmin for PostgreSQL GUI management...${NC}"
-#     sudo nala install -y pgadmin4-desktop pgadmin4-web || error_exit "pgAdmin installation failed."
+    # Update package list
+    sudo nala update || error_exit "Failed to update package list."
 
-#     # Configure the pgAdmin web server (automatic configuration)
-#     echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
-#     sudo /usr/pgadmin4/bin/setup-web.sh --email admin@root.com --password ' password' || error_exit "Failed to configure pgAdmin web server."
+    # Install PostgreSQL
+    sudo nala install -y postgresql postgresql-contrib || error_exit "PostgreSQL installation failed."
 
-#     # Configure PostgreSQL (optional)
-#     echo -e "${GREEN}Configuring PostgreSQL...${NC}"
+    # Execute the PostgreSQL setup script
+    sudo nala install -y postgresql-common || error_exit "Failed to install postgresql-common."
+    yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || error_exit "Failed to execute PostgreSQL setup script."
 
-#     # Switch to the postgres user to execute psql commands
-#     PASSWORD='password'  # Replace with your desired password
-#     sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
+    # Setup the pgAdmin repository
+    echo -e "${GREEN}Setting up the pgAdmin repository...${NC}"
+    curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+    echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" | sudo tee /etc/apt/sources.list.d/pgadmin4.list
 
-#     # Allow remote connections (optional)
-#     echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
-#     echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
+    # Update package list after adding pgAdmin repository
+    sudo nala update || error_exit "Failed to update package list after adding pgAdmin repository."
 
-#     # Restart PostgreSQL to apply changes
-#     sudo systemctl restart postgresql || error_exit "Failed to restart PostgreSQL service."
+    # Install pgAdmin for GUI management
+    echo -e "${GREEN}Installing pgAdmin for PostgreSQL GUI management...${NC}"
+    sudo nala install -y pgadmin4-desktop pgadmin4-web || error_exit "pgAdmin installation failed."
 
-#     echo -e "${GREEN}PostgreSQL installation and configuration completed successfully!${NC}"
-# }
+    # Configure the pgAdmin web server
+    echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
+    sudo /usr/pgadmin4/bin/setup-web.sh --email admin@root.com --password 'password' || error_exit "Failed to configure pgAdmin web server."
 
-# install_postgresql() {
-#     echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
+    # Configure PostgreSQL
+    echo -e "${GREEN}Configuring PostgreSQL...${NC}"
+    PASSWORD='password'  # Replace with your desired password
+    sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
 
-#     # Update package list
-#     sudo apt update || error_exit "Failed to update package list."
+    # Allow remote connections
+    echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
+    echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
 
-#     # Install PostgreSQL
-#     sudo nala install -y postgresql postgresql-contrib || error_exit "PostgreSQL installation failed."
+    # Restart PostgreSQL to apply changes
+    sudo systemctl restart postgresql || error_exit "Failed to restart PostgreSQL service."
 
-#     # Execute the PostgreSQL setup script
-#     yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || error_exit "Failed to execute PostgreSQL setup script."
+    echo -e "${GREEN}PostgreSQL installation and configuration completed successfully!${NC}"
+}
 
-#     # Setup the pgAdmin repository
-#     echo -e "${GREEN}Setting up the pgAdmin repository...${NC}"
-#     curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
-#     echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/noble pgadmin4 main" | sudo tee /etc/apt/sources.list.d/pgadmin4.list
 
-#     # Update package list after adding pgAdmin repository
-#     sudo apt update || error_exit "Failed to update package list after adding pgAdmin repository."
-
-#     # Install pgAdmin for GUI management
-#     echo -e "${GREEN}Installing pgAdmin for PostgreSQL GUI management...${NC}"
-#     sudo nala install -y pgadmin4-desktop pgadmin4-web || error_exit "pgAdmin installation failed."
-
-#     # Configure the pgAdmin web server (automatic configuration)
-#     echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
-#     sudo /usr/pgadmin4/bin/setup-web.sh  || error_exit "Failed to configure pgAdmin web server."
-
-#     # Configure PostgreSQL
-#     echo -e "${GREEN}Configuring PostgreSQL...${NC}"
-
-#     # Set PostgreSQL password
-#     PASSWORD='password'  # Replace with your desired password
-#     sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
-
-#     # Allow remote connections
-#     echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
-#     echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
-
-#     # Restart PostgreSQL to apply changes
-#     sudo systemctl restart postgresql || error_exit "Failed to restart PostgreSQL service."
-
-#     echo -e "${GREEN}PostgreSQL installation and configuration completed successfully!${NC}"
-# }
 
 install_nala() {
     echo -e "${GREEN}Installing Nala...${NC}"
