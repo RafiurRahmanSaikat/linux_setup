@@ -40,7 +40,7 @@ show_menu() {
     echo -e "12) Install PostgreSQL"
     echo -e "13) Install Fish and Set Up Aliases"
     echo -e "14) Install All"
-    echo -e "15) Exit"  # Update exit option number
+    echo -e "15) Exit"
     echo -e "${BOLD}${GREEN}$border${NC}"
     read -p "Enter your choice [0-15]: " choice
 }
@@ -656,6 +656,8 @@ error_exit() {
     exit 1
 }
 
+
+# ! Not Available For Kubuntu 24.10
 install_postgresql() {
     echo -e "${GREEN}Starting installation of PostgreSQL...${NC}"
 
