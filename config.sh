@@ -34,13 +34,14 @@ show_menu() {
     echo -e "6) Install MongoDB"
     echo -e "7) Install Postman"
     echo -e "8) Install Google Chrome"
-    echo -e "9) Install Zoom"
-    echo -e "10) Install MySQL and Workbench"
-    echo -e "11) Install Visual Studio Code"
-    echo -e "12) Install PostgreSQL"
-    echo -e "13) Install Fish and Set Up Aliases"
-    echo -e "14) Install All"
-    echo -e "15) Exit"
+    echo -e "9) Install Mozila Firefox "
+    echo -e "10) Install Zoom"
+    echo -e "11) Install MySQL and Workbench"
+    echo -e "12) Install Visual Studio Code"
+    echo -e "13) Install PostgreSQL"
+    echo -e "14) Install Fish and Set Up Aliases"
+    echo -e "15) Install All"
+    echo -e "16) Exit"
     echo -e "${BOLD}${GREEN}$border${NC}"
     read -p "Enter your choice [0-15]: " choice
 }
@@ -61,10 +62,11 @@ install_dev_softwere() {
     install_python
     install_mongodb
     install_mysql
-#     install_postgresql
+    install_postgresql
     install_postman
     install_vscode
     install_chrome
+    install_firefox
     install_zoom
     install_grub
 
@@ -127,11 +129,11 @@ setup_aliases() {
         echo "alias yl='yarn list --depth=0'"
 
         echo "# Python and Django Aliases"
-        echo "alias py='python3.12'"
-        echo "alias python='python3.12'"
-        echo "alias pip='pip3.12'"
-        echo "alias pyenv='python3.12 -m venv'"
-        echo "alias dj='python3.12 manage.py'"
+        echo "alias py='python3.13'"
+        echo "alias python='python3.13'"
+        echo "alias pip='pip3.13'"
+        echo "alias pyenv='python3.13 -m venv'"
+        echo "alias dj='python3.13 manage.py'"
         echo "alias djs='dj runserver'"
         echo "alias djmm='dj makemigrations'"
         echo "alias djm='dj migrate'"
@@ -271,19 +273,19 @@ setup_aliases() {
 
         echo "# Python and Django Aliases"
         echo "function py"
-        echo "    python3.12 \$argv"
+        echo "    python3.13 \$argv"
         echo "end"
         echo ""
         echo "function pip"
-        echo "    pip3.12 \$argv"
+        echo "    pip3.13 \$argv"
         echo "end"
         echo ""
         echo "function pyenv"
-        echo "    python3.12 -m venv \$argv"
+        echo "    python3.13 -m venv \$argv"
         echo "end"
         echo ""
         echo "function dj"
-        echo "    python3.12 manage.py \$argv"
+        echo "    python3.13 manage.py \$argv"
         echo "end"
         echo ""
         echo "function djs"
@@ -512,15 +514,15 @@ install_python() {
     {
         echo "set -g fish_greeting ''"
         echo "function pip"
-        echo "    pip3.12 \$argv"
+        echo "    pip3.13 \$argv"
         echo "end"
         echo ""
         echo "function py"
-        echo "    python3.12 \$argv"
+        echo "    python3.13 \$argv"
         echo "end"
         echo ""
         echo "function python"
-        echo "    python3.12 \$argv"
+        echo "    python3.13 \$argv"
         echo "end"
         echo ""
 
@@ -584,6 +586,46 @@ install_chrome() {
     install_package "google-chrome-*.deb"
     echo -e "${GREEN}Chrome installation completed successfully!${NC}"
 }
+install_firefox() {
+    echo -e "${GREEN}Starting installation of Firefox...${NC}"
+
+    FIREFOX_ARCHIVE=$(find "$APP_DIR" -name "firefox*.tar.bz2" -print -quit)
+
+    # Check if the archive exists
+    if [ -z "$FIREFOX_ARCHIVE" ]; then
+        error_exit "Firefox tarball not found. Please ensure the Firefox tarball is in the '$APP_DIR' directory."
+    fi
+
+    # Create installation directory if it doesn't exist
+    sudo mkdir -p /opt/firefox || error_exit "Failed to create installation directory."
+
+    # Extract the tarball
+    echo "Extracting $FIREFOX_ARCHIVE..."
+    sudo tar -xjf "$FIREFOX_ARCHIVE" -C /opt/firefox --strip-components=1 || error_exit "Failed to extract Firefox tarball."
+
+    # Create symbolic link
+    echo "Creating symbolic link for Firefox..."
+    sudo ln -sf /opt/firefox/firefox /usr/bin/firefox || error_exit "Failed to create Firefox symlink."
+
+    # Create a desktop entry
+    DESKTOP_FILE="/usr/share/applications/firefox.desktop"
+    if [ ! -f "$DESKTOP_FILE" ]; then
+        echo -e "${YELLOW}Creating Firefox desktop entry...${NC}"
+        cat <<EOF | sudo tee "$DESKTOP_FILE"
+[Desktop Entry]
+Name=Firefox
+Exec=/usr/bin/firefox
+Icon=/opt/firefox/browser/chrome/icons/default/default128.png
+Type=Application
+Categories=Network;WebBrowser;
+Terminal=false
+EOF
+        sudo chmod +x "$DESKTOP_FILE" || error_exit "Failed to make the desktop entry executable."
+    fi
+
+    echo -e "${GREEN}Firefox installation completed successfully!${NC}"
+}
+
 
 install_zoom() {
     echo -e "${GREEN}Starting installation of Zoom...${NC}"
@@ -683,18 +725,18 @@ install_postgresql() {
     echo -e "${GREEN}Installing pgAdmin for PostgreSQL GUI management...${NC}"
     sudo nala install -y pgadmin4-desktop pgadmin4-web || error_exit "pgAdmin installation failed."
 
-    # Configure the pgAdmin web server
-    echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
-    sudo /usr/pgadmin4/bin/setup-web.sh --email admin@root.com --password 'password' || error_exit "Failed to configure pgAdmin web server."
+    # # Configure the pgAdmin web server
+    # echo -e "${GREEN}Configuring pgAdmin web server...${NC}"
+    # sudo /usr/pgadmin4/bin/setup-web.sh --email admin@root.com --password 'password' || error_exit "Failed to configure pgAdmin web server."
 
     # Configure PostgreSQL
-    echo -e "${GREEN}Configuring PostgreSQL...${NC}"
-    PASSWORD='password'  # Replace with your desired password
-    sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
+    # echo -e "${GREEN}Configuring PostgreSQL...${NC}"
+    # PASSWORD='password'  # Replace with your desired password
+    # sudo -i -u postgres psql -c "ALTER USER postgres PASSWORD '$PASSWORD';" || error_exit "Failed to set PostgreSQL password."
 
     # Allow remote connections
-    echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
-    echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
+    # echo "host    all             all             0.0.0.0/0               md5" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/pg_hba.conf
+    # echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/$(pg_lsclusters --quiet | awk '{print $1}')/main/postgresql.conf
 
     # Restart PostgreSQL to apply changes
     sudo systemctl restart postgresql || error_exit "Failed to restart PostgreSQL service."
@@ -721,20 +763,94 @@ while true; do
     case $choice in
         0) install_mount_drive_set_time ;;
         1) install_dev_softwere ;;
-        2) install_grub ;;  # Call the new function
+        2) install_grub ;;
         3) install_git ;;
         4) install_nvm_node ;;
         5) install_python ;;
         6) install_mongodb ;;
         7) install_postman ;;
         8) install_chrome ;;
-        9) install_zoom ;;
-        10) install_mysql ;;
-        11) install_vscode ;;
-        12) install_postgresql ;;
-        13) install_fish && config_bash_shell ;;
-        14) install_mount_drive_set_time && install_dev_softwere;;
-        15) exit 0 ;;  # Update exit option
+        9) install_firefox ;;
+        10) install_zoom ;;
+        11) install_mysql ;;
+        12) install_vscode ;;
+        13) install_postgresql ;;
+        14) install_fish && config_bash_shell ;;
+        15) install_mount_drive_set_time && install_dev_softwere;;
+        16) exit 0 ;;
         *) echo -e "${RED}Invalid option. Please try again.${NC}" ;;
     esac
 done
+
+
+
+
+
+
+# import os
+# import subprocess
+# import shutil
+# import tarfile
+
+# APP_DIR = "/path/to/your/application/directory"
+# FIREFOX_ARCHIVE = os.path.join(APP_DIR, "firefox-133.0.tar.bz2")
+# INSTALL_DIR = "/opt/firefox"
+# BIN_LINK = "/usr/bin/firefox"
+
+# def error_exit(message):
+#     print(f"\033[91mError: {message}\033[0m")
+#     exit(1)
+
+# def install_firefox():
+#     print("\033[92mStarting installation of Firefox...\033[0m")
+
+#     # Check if the archive exists
+#     if not os.path.exists(FIREFOX_ARCHIVE):
+#         error_exit(f"Firefox tarball not found. Please ensure the tarball is in the '{APP_DIR}' directory.")
+
+#     # Extract the archive
+#     print(f"Extracting {FIREFOX_ARCHIVE}...")
+#     try:
+#         with tarfile.open(FIREFOX_ARCHIVE, "r:bz2") as tar:
+#             tar.extractall(path="/opt")
+#     except Exception as e:
+#         error_exit(f"Failed to extract Firefox tarball: {e}")
+
+#     # Move the extracted folder to the installation directory
+#     extracted_dir = os.path.join("/opt", "firefox")
+#     if os.path.exists(INSTALL_DIR):
+#         print("Removing existing Firefox installation...")
+#         try:
+#             shutil.rmtree(INSTALL_DIR)
+#         except Exception as e:
+#             error_exit(f"Failed to remove existing installation: {e}")
+
+#     print(f"Installing Firefox to {INSTALL_DIR}...")
+#     try:
+#         shutil.move(extracted_dir, INSTALL_DIR)
+#     except Exception as e:
+#         error_exit(f"Failed to move Firefox directory: {e}")
+
+#     # Create a symbolic link
+#     if os.path.islink(BIN_LINK):
+#         print("Removing existing symbolic link...")
+#         try:
+#             os.unlink(BIN_LINK)
+#         except Exception as e:
+#             error_exit(f"Failed to remove symbolic link: {e}")
+
+#     print("Creating symbolic link...")
+#     try:
+#         os.symlink(os.path.join(INSTALL_DIR, "firefox"), BIN_LINK)
+#     except Exception as e:
+#         error_exit(f"Failed to create symbolic link: {e}")
+
+#     # Check installation
+#     if shutil.which("firefox"):
+#         print("\033[92mFirefox installed successfully! Run 'firefox' to start.\033[0m")
+#     else:
+#         error_exit("Firefox installation failed.")
+
+# if __name__ == "__main__":
+#     install_firefox()
+
