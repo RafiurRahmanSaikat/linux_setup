@@ -26,7 +26,7 @@ readonly APP_DIR="/Data/Software/Linux/Applications"
 readonly BACKUP_DIR="/Data/Software/Linux/Backups"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly LOG_FILE="${SCRIPT_DIR}/setup_dev_env_$(date +%Y%m%d_%H%M%S).log"
-readonly NTFS_UUID="ur uuid"
+readonly NTFS_UUID="746AACA86AAC6896"
 readonly NTFS_MOUNT="/Data"
 
 # Auto-configuration settings
